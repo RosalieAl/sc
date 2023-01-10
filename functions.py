@@ -10,6 +10,7 @@ import math
 import numpy as np
 import scipy.linalg as lg
 from scipy.sparse import diags
+from numpy.linalg import norm
 
 
 def matrix_1d(n):
@@ -186,9 +187,12 @@ def SOR(A, f, max_iterations):
     n = np.shape(A)[0]
     u = np.zeros(n)
     r = np.zeros(n)
+    M = np.zeros(max_iterations)
+    E = np.zeros(max_iterations)
     
     while iterations < max_iterations:
         for i in range(n):
+            
             sigma = u[i]
             u[i] = f[i]
             for j in range(i):
@@ -198,14 +202,18 @@ def SOR(A, f, max_iterations):
             if A[i][i] != 0:
                 u[i] = u[i] / A[i][i]
                 u[i] = (1-omega)*sigma + omega * u[i]
+        r = f - np.matmul(A,u)
+        res = norm(r)
+        f_norm = norm(f)
+        error = res / f_norm
+        # print(error)
+        E[iterations] = error
+        # print(E[iterations])
+        M[iterations] = iterations
         iterations += 1
-        
     
-    r = f - np.matmul(A,u)
-    return u, r
-            
-            
-            
+    # r = f - np.matmul(A,u)
+    return u, E, M
             
             
             
