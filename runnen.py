@@ -17,12 +17,12 @@ from matplotlib import pyplot as plt
 
 def main():
     
-    p = 5
+    p = 2
     h = 1/(2**p)
     n = 2**p
     A_h = f.matrix_2d(f.matrix_1d(n),f.semi_I(n))
-    m = 1000
-    #start_time1 = time.time()
+    m =  100
+    # start_time1 = time.time()
     #L, U = f.LU(A_h)
     #print(plt.pyplot.imshow(L))
     #print(plt.pyplot.imshow(A_h))
@@ -33,9 +33,20 @@ def main():
     #u_h = f.LU_solver(L,U,f_h)
     #print(u_h)
     #print("--- %s seconds ---" % (time.time() - start_time2))
-    u_h2, E, M = f.SOR(A_h,f_h,m) 
-    print(u_h2)
+    #start_time1 = time.time()
+    #u_h2, E, M, residuals = f.SOR(A_h,f_h,m) 
+    #print(u_h2)
+    #print("--- %s seconds ---" % (time.time() - start_time1))
     # print(E)
+    # i_convergence = 0
+    # for i in range(m):
+    #     if E[i] < 10**(-10) and E[i-1] >= 10**(-10):
+    #         i_convergence = i
+    #         print(i_convergence)
+    #         break
+
+    # for j in range(i_convergence-5, i_convergence):
+    #     print(residuals[j]/residuals[j-1])
     # print(residual)
     
     # res = norm(residual)
@@ -54,12 +65,16 @@ def main():
     
     #return max_distance, u_h
     # print(max(M))
-    plt.yscale("log")
-    plt.scatter(M, E)
-    plt.xlabel('$m$')
-    plt.ylabel('$log_{10} Error$')
-    plt.axis([min(M), max(M), min(E), max(E)])
-    plt.show()
+    # plt.yscale("log")
+    # plt.scatter(M, E)
+    # plt.xlabel('$m$')
+    # plt.ylabel('$log_{10} Error$')
+    # plt.axis([min(M), max(M), min(E), max(E)])
+    # plt.show()
+    
+    H, V = f.GMRES(A_h, f_h, 2)
+    print(H)
+    print(V)
     return
     
 if __name__ == "__main__":

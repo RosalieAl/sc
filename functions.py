@@ -187,6 +187,7 @@ def SOR(A, f, max_iterations):
     n = np.shape(A)[0]
     u = np.zeros(n)
     r = np.zeros(n)
+    res_norm = np.zeros(max_iterations)
     M = np.zeros(max_iterations)
     E = np.zeros(max_iterations)
     
@@ -204,6 +205,7 @@ def SOR(A, f, max_iterations):
                 u[i] = (1-omega)*sigma + omega * u[i]
         r = f - np.matmul(A,u)
         res = norm(r)
+        res_norm[iterations] = res
         f_norm = norm(f)
         error = res / f_norm
         # print(error)
@@ -213,8 +215,35 @@ def SOR(A, f, max_iterations):
         iterations += 1
     
     # r = f - np.matmul(A,u)
-    return u, E, M
-            
+    return u, E, M, res_norm
+
+def GMRES(A, f, k):
+    n = np.shape(A)[0]
+    u = np.zeros(n)
+    H = np.zeros(shape=(n,n))
+    V = []
+    M = A.copy()
+    omega = 1.5
+    
+    for i in range(n):
+        for j in range(i+1,n):
+            M[i][i] = omega * M[i][i]
+            M[i][j] = 0
+                 
+    r = np.matmul(M,(f - np.matmul(A,u)))
+    v = r / norm(r)
+    V.append(v)
+    
+    for j in range(k):
+        v = np.matmul(A, V[j])
+        V.append(v)
+        for i in range(j+1):
+            H[i][j] = np.matmul(V[j+1],np.transpose(V[i]))
+            V[j+1] -= H[i][j] * V[i]
+        H[j+1][j] = norm(V[j+1])
+        V[j+1] = V[j+1] / H[j+1][j]
+        
+    return H, V
             
             
         
