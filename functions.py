@@ -10,7 +10,9 @@ import math
 import numpy as np
 import scipy.linalg as lg
 from scipy.sparse import diags
+import scipy.sparse.linalg
 from numpy.linalg import norm
+from numpy.linalg import inv
 
 
 def matrix_1d(n):
@@ -217,34 +219,116 @@ def SOR(A, f, max_iterations):
     # r = f - np.matmul(A,u)
     return u, E, M, res_norm
 
-def GMRES(A, f, k):
+def GMRES_SOR(A, f, tol=(10)**(-10)):
     n = np.shape(A)[0]
-    u = np.zeros(n)
-    H = np.zeros(shape=(n,n))
+    U = []
+    H = np.zeros(shape=(n+1,n))
     V = []
+    residuals = []
+    e = np.zeros(n+1)
+    u_0 = np.zeros(n)
+    U.append(u_0)
+    
     M = A.copy()
     omega = 1.5
     
     for i in range(n):
         for j in range(i+1,n):
-            M[i][i] = omega * M[i][i]
-            M[i][j] = 0
-                 
-    r = np.matmul(M,(f - np.matmul(A,u)))
-    v = r / norm(r)
-    V.append(v)
+            M[i][i] = (1/omega) * A[i][i]
+            if i < n-1:
+                M[i][j] = 0
+
+    M_inv = inv(M)
+
     
-    for j in range(k):
-        v = np.matmul(A, V[j])
+    r_0 = np.matmul(M_inv, f - np.matmul(A,u_0))
+    v_0 = r_0 / norm(r_0)
+    V.append(v_0)
+    residuals.append(norm(r_0)/norm(f))
+    e[0] = norm(r_0)
+
+    for k in range(n):
+        v = np.matmul(A, V[k])
         V.append(v)
-        for i in range(j+1):
-            H[i][j] = np.matmul(V[j+1],np.transpose(V[i]))
-            V[j+1] -= H[i][j] * V[i]
-        H[j+1][j] = norm(V[j+1])
-        V[j+1] = V[j+1] / H[j+1][j]
+        for i in range(k+1):
+            H[i][k] = np.matmul(V[k+1],np.transpose(V[i])) #kijken nog welke transpose
+            V[k+1] -= H[i][k] * V[i]
+        H[k+1][k] = norm(V[k+1])
+        if (H[k+1][k] != 0 and k != n-1):
+            V[k+1] = V[k+1] / H[k+1][k]
         
-    return H, V
+
+        y = scipy.sparse.linalg.lsqr(H, e, atol=1e-64, btol = 1e-64)[0] #miss aanpassen
+        u = np.transpose(V[k+1])*y #miss transpose
+        U.append(u)
+    
+        r = f - np.matmul(A,u)
+        res = norm(r)
+        error = res / norm(f)
+        residuals.append(error)
             
+        if error < tol:
+            return U, residuals
+       
+    return U, residuals
+    
+def GMRES_ILU(A, f, tol=(10)**(-10)):
+    n = np.shape(A)[0]
+    U = []
+    H = np.zeros(shape=(n+1,n))
+    V = []
+    residuals = []
+    e = np.zeros(n+1)
+    u_0 = np.zeros(n)
+    U.append(u_0)
+
+
+    L = np.zeros(shape=(n,n))
+    for z in range(n):
+        L[z][z] = 1
+    
+    Up = np.copy(A)
+    
+    for i in range(n):
+        for j in range(i+1, n):
+            if A[j][i] != 0:
+                L[j][i] = Up[j][i] / Up[i][i]
+            for k in range(n):
+                if A[j][k] != 0:
+                    Up[j][k] = Up[j][k] - L[j][i]*Up[i][k]
+
+    M_inv = np.matmul(inv(Up),inv(L))
+
+    r_0 = np.matmul(M_inv, f - np.matmul(A,u_0))
+    v_0 = r_0 / norm(r_0)
+    V.append(v_0)
+    residuals.append(norm(r_0)/norm(f))
+    e[0] = norm(r_0)
+
+    for k in range(n):
+        v = np.matmul(A, V[k])
+        V.append(v)
+        for i in range(k+1):
+            H[i][k] = np.matmul(V[k+1],np.transpose(V[i])) #kijken nog welke transpose
+            V[k+1] -= H[i][k] * V[i]
+        H[k+1][k] = norm(V[k+1])
+        if (H[k+1][k] != 0 and k != n-1):
+            V[k+1] = V[k+1] / H[k+1][k]
+        
+
+        y = scipy.sparse.linalg.lsqr(H, e, atol=1e-64, btol = 1e-64)[0] #miss aanpassen
+        u = np.transpose(V[k+1])*y #miss transpose
+        U.append(u)
+    
+        r = f - np.matmul(A,u)
+        res = norm(r)
+        error = res / norm(f)
+        residuals.append(error)
+            
+        if error < tol:
+            return U, residuals
+       
+    return U, residuals
             
         
         
