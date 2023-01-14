@@ -19,7 +19,7 @@ from matplotlib import pyplot as plt
 def main():
     
     #define p, h and n
-    p = 7
+    p = 3
     h = 1/(2**p)
     n = 2**p
     
