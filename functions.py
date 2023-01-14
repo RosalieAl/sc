@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Dec 20 15:32:01 2022
 
-@author: hester
-"""
-
-import matplotlib as plt
 import math
 import numpy as np
 import scipy.linalg as lg
@@ -68,9 +62,8 @@ def u(n):
     
     return u_values
 
-# function to determine an matrix that has 1's on 
-# the diagonal except in the corners, there it has
-# 0's 
+# function to determine an matrix that has 1's on the diagonal
+# except in the corners, there it has zero's 
 def semi_I(n):
     id = np.zeros(shape=(n+1,n+1))
     
@@ -80,7 +73,7 @@ def semi_I(n):
     return id   
 
 # function that makes a 2-d matrix out of two
-# 1-d matrices        
+# 1-d matrices A and B       
 def matrix_2d(A,B):
     n = np.shape(A)[0]
     # take sum of kronecker product of matrices
@@ -114,61 +107,39 @@ def functionvalues2(n):
     f = f.flatten('F')
     return f
        
-# function that determines u in the 2-d case 
+# function that determines u_{ex} in the 2-d case 
 def u_2d(n):
     h = 1/n
     u = np.zeros(shape=(n+1,n+1))
-    # determine u
+    # determine u_{ex}
     for i in range(n+1):
         for j in range(n+1):
             u[i][j] = math.sin((i*h)*(j*h))
     # make matrix into one long vector
     u = u.flatten('F')
     return u
-        
-#def LU(A):
-#    n = np.shape(A)[0]
-#    L = np.zeros(shape=(n,n))
-#    for z in range(n):
 
-    #        L[z][z] = 1
-#    U = np.copy(A)
-    
-#    for i in range(n):
-#        for j in range(i+1, n):
-#            L[j][i] = U[j][i] / U[i][i]
-#            for k in range(n):
-#                U[j][k] = U[j][k] - L[j][i]*U[i][k]
-#    return L, U
-
-# function that determines the LU-
-# decomposition of a given matrix A
+# function that determines the LU-decomposition of a given matrix A
 def LU(A):
     n = np.shape(A)[0]
-    
-    # initialize U and L
     U = A.copy()
     L = np.eye(n, dtype=np.double)
     
-    # loop over rows
+    # LU factorization, loping over rows
     for i in range(n):
-            
-        # eiminate entries below i with row operations 
-        # on U and reverse the row operations to 
-        # change L
+        # eiminate entries below i with row operations on U
+        # reverse the row operations to change L
         factor = U[i+1:, i] / U[i, i]
         L[i+1:, i] = factor
-        U[i+1:] -= factor[:, np.newaxis] * U[i]
-        
+        U[i+1:] -= factor[:, np.newaxis] * U[i] 
     return L,U
 
-# function that determines u of a given LU
-# decomposition and an output function f            
+# function that determines the  discrete solution u of a given LU-decomposition
+# and an output function f            
 def LU_solver(L, U, f):
     n = np.shape(L)[0]
     y = np.zeros(n)
     u = np.zeros(n)
-    
     y[0] = f[0]
     
     # forward solving 
@@ -176,7 +147,6 @@ def LU_solver(L, U, f):
         y[i] = f[i]
         for j in range(i):
             y[i] -= L[i][j]*y[j]
-    
     u[-1] = y[-1] / U[-1][-1]
     
     # backward solving
@@ -184,17 +154,13 @@ def LU_solver(L, U, f):
         u[k] = y[k]
         for l in range(n-1, k, -1):
             u[k] -= U[k][l]*u[l]
-        #for l in range(k, n):
-        #    u[k] -= U[k][l]*u[l]
         if U[k][k] != 0:
             u[k] = u[k] / U[k][k]
-            
     return u
 
-# function that implements the Successive
-# Overrelaxation Method with omega = 1.5
-# given a matrix A, vector f and a max 
-# number of iterations            
+# function that implements the Successive Overrelaxation Method 
+# with omega = 1.5
+# given a matrix A, vector f and a max number of iterations            
 def SOR(A, f, max_iterations):
     # counter and omega
     iterations = 0
@@ -239,8 +205,7 @@ def SOR(A, f, max_iterations):
     return u, E, M, res_norm
 
 # function that implements the GMRES method
-# using the SOR(1.5) matrix as a 
-# preconditioner
+# using the SOR(1.5) matrix as a preconditioner
 def GMRES_SOR(A, f, tol=(10)**(-10)):
     n = np.shape(A)[0]
     # initialize array s for u's, v's and residuals
@@ -258,7 +223,6 @@ def GMRES_SOR(A, f, tol=(10)**(-10)):
     # make preconditioner matrix
     M = A.copy()
     omega = 1.5
-    
     for i in range(n):
         for j in range(i+1,n):
             # 1/omega times diagonal
@@ -298,7 +262,7 @@ def GMRES_SOR(A, f, tol=(10)**(-10)):
         
         # determine residual
         r = f - np.matmul(A,u)
-        #determine norm of residual, divide by norm f
+        # determine norm of residual, divide by norm f
         # and add to residuals array
         res = norm(r)
         error = res / norm_f
@@ -312,8 +276,7 @@ def GMRES_SOR(A, f, tol=(10)**(-10)):
     return U, residuals
 
 # function that implements the GMRES method
-# using the ILU matrix as a 
-# preconditioner    
+# using the ILU matrix as a preconditioner    
 def GMRES_ILU(A, f, tol=(10)**(-10)):
     n = np.shape(A)[0]
     # initialize array s for u's, v's and residuals
@@ -375,7 +338,7 @@ def GMRES_ILU(A, f, tol=(10)**(-10)):
         
         # determine residual
         r = f - np.matmul(A,u)
-        #determine norm of residual, divide by norm f
+        # determine norm of residual, divide by norm f
         # and add to residuals array
         res = norm(r)
         error = res / norm_f
