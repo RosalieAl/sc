@@ -18,23 +18,35 @@ from matplotlib import pyplot as plt
 
 def main():
     
-    p = 5
+    #define p, h and n
+    p = 7
     h = 1/(2**p)
     n = 2**p
+    
+    #initialize the matrix A^h
     A_h = f.matrix_2d(f.matrix_1d(n),f.semi_I(n))
     # m =  100
+    
+    # calculate LU-decomposition of A^h
     # start_time1 = time.time()
-    #L, U = f.LU(A_h)
+    L, U = f.LU(A_h)
     #print(plt.pyplot.imshow(L))
     #print(plt.pyplot.imshow(A_h))
     #print(A_h)
     #print("--- %s seconds ---" % (time.time() - start_time1))
     #start_time2 = time.time()
+    
+    # determine f^h
     f_h = f.functionvalues2(n)
-    #u_h = f.LU_solver(L,U,f_h)
+    
+    # calculate u using the LU-decomposition
+    u_h = f.LU_solver(L,U,f_h)
     #print(u_h)
     #print("--- %s seconds ---" % (time.time() - start_time2))
     #start_time1 = time.time()
+    
+    # calculate u using the Successive Overrelaxation Method and
+    # calculate the time it takes
     #u_h2, E, M, residuals = f.SOR(A_h,f_h,m) 
     #print(u_h2)
     #print("--- %s seconds ---" % (time.time() - start_time1))
@@ -55,16 +67,16 @@ def main():
     # error = res / f_norm
     # print(error)
     
-    # u_ex = f.u_2d(n)
+    u_ex = f.u_2d(n)
     
-    # length = len(u_ex)
-    # max_distance = 0 
+    length = len(u_ex)
+    max_distance = 0 
     
-    # for i in range(length):
-    #     if abs(u_h[i] - u_ex[i]) > max_distance:
-    #         max_distance = abs(u_h[i] - u_ex[i])
-    
-    #return max_distance, u_h
+    for i in range(length):
+        if abs(u_h[i] - u_ex[i]) > max_distance:
+            max_distance = abs(u_h[i] - u_ex[i])
+    print(max_distance)
+
     # print(max(M))
     # plt.yscale("log")
     # plt.scatter(M, E)
@@ -75,10 +87,10 @@ def main():
     
     #vanaf hier GMRES_SOR
     # start_time2 = time.time()
-    #U, res = f.GMRES_SOR(A_h, f_h)
+    # U, res = f.GMRES_SOR(A_h, f_h)
     # print("--- %s seconds ---" % (time.time() - start_time2))
     # print(U)
-    #print(res)
+    # print(res)
     # iterations = len(res)
     # print(iterations)
     # M = np.zeros(iterations)
@@ -92,22 +104,22 @@ def main():
     # plt.show()
     
     #vanaf nu GMRES met ILU
-    start_time2 = time.time()
-    U, res = f.GMRES_ILU(A_h, f_h)
-    print("--- %s seconds ---" % (time.time() - start_time2))
-    #print(U)
-    print(res)
-    iterations = len(res)
-    print(iterations)
-    M = np.zeros(iterations)
-    for i in range(iterations):
-        M[i]=i
-    plt.yscale("log")
-    plt.scatter(M, res)
-    plt.xlabel('$m$')
-    plt.ylabel('$log_{10} Error$')
-    plt.axis([min(M), max(M), min(res), max(res)])
-    plt.show()
+    # start_time2 = time.time()
+    # U, res = f.GMRES_ILU(A_h, f_h)
+    # print("--- %s seconds ---" % (time.time() - start_time2))
+    # print(U)
+    # print(res)
+    # iterations = len(res)
+    # print(iterations)
+    # M = np.zeros(iterations)
+    # for i in range(iterations):
+    #     M[i]=i
+    # plt.yscale("log")
+    # plt.scatter(M, res)
+    # plt.xlabel('$m$')
+    # plt.ylabel('$log_{10} Error$')
+    # plt.axis([min(M), max(M), min(res), max(res)])
+    # plt.show()
     return
     
 if __name__ == "__main__":
